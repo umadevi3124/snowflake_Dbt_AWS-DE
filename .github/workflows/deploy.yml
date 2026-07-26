@@ -1,0 +1,48 @@
+name: Deploy dbt Changes to Snowflake
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main
+  workflow_dispatch:  # 👈 Enables manual execution button in GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DBT_SNOWFLAKE_ACCOUNT: lk45167.ap-southeast-7.aws
+      DBT_SNOWFLAKE_USER: umadevib
+      DBT_SNOWFLAKE_ROLE: ACCOUNTADMIN
+      DBT_SNOWFLAKE_WAREHOUSE: TRANSFORMING
+      DBT_SNOWFLAKE_DATABASE: ANALYTICS
+      DBT_SNOWFLAKE_SCHEMA: DBT_SCHEMA
+      SNOWFLAKE_PASSPHRASE: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
+      DBT_SNOWFLAKE_PRIVATE_KEY_PATH: ./rsa_key.pem
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dbt & Snowflake adapter
+        run: |
+          pip install --upgrade pip
+          pip install dbt-snowflake
+
+      - name: Write RSA Private Key File
+        run: |
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > ./rsa_key.pem
+          chmod 600 ./rsa_key.pem
+
+      - name: Test dbt Connection & Build Models
+        run: |
+          dbt debug --profiles-dir .
+          dbt build --profiles-dir .
+
+      - name: Cleanup Private Key
+        if: always()
+        run: rm -f ./rsa_key.pem

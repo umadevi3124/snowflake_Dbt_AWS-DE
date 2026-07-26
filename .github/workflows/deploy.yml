@@ -3,12 +3,13 @@ name: Deploy dbt Changes to Snowflake
 on:
   push:
     branches:
-      - main  # Trigger on push to main
-  workflow_dispatch:  # 👈 Enables manual execution button in GitHub UI
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     env:
       DBT_SNOWFLAKE_ACCOUNT: lk45167.ap-southeast-7.aws
       DBT_SNOWFLAKE_USER: umadevib
@@ -21,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.10'
 
